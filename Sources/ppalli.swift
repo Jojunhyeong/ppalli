@@ -1674,7 +1674,7 @@ extension WhipView {
 // MARK: - 앱 (메뉴 막대 아이콘으로 설정)
 
 /// GitHub 저장소 주소 (정보 창과 메뉴의 "홈페이지"에 쓰임)
-let homepageURL = "https://github.com/YOUR_GITHUB_ID/ppalli"
+let homepageURL = "https://github.com/Jojunhyeong/ppalli"
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     var windows: [FxWindow] = []

@@ -78,7 +78,7 @@ xattr -dr com.apple.quarantine /Applications/Ppalli.app
 Xcode 또는 Command Line Tools(`xcode-select --install`)가 필요해요.
 
 ```bash
-git clone <이 저장소 주소>
+git clone https://github.com/Jojunhyeong/ppalli.git
 cd ppalli
 ./install.sh          # 빌드해서 응용 프로그램 폴더에 설치
 ```
@@ -146,7 +146,7 @@ While whip mode is on, clicks don't reach other apps, so you can't accidentally 
 **Build from source**
 
 ```bash
-git clone <this repo>
+git clone https://github.com/Jojunhyeong/ppalli.git
 cd ppalli
 ./install.sh
 ```
