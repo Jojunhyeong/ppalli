@@ -7,13 +7,13 @@ cd "$(dirname "$0")"
 ./scripts/build-app.sh
 
 if [ -w /Applications ]; then DEST=/Applications; else DEST="$HOME/Applications"; mkdir -p "$DEST"; fi
-pkill -x Whip 2>/dev/null || true
+pkill -x Ppalli 2>/dev/null || true
 sleep 0.5
-rm -rf "$DEST/Whip.app"
-cp -R build/Whip.app "$DEST/"
+rm -rf "$DEST/Ppalli.app"
+cp -R build/Ppalli.app "$DEST/"
 
 echo "🚀 실행!"
-open "$DEST/Whip.app"
+open "$DEST/Ppalli.app"
 echo ""
-echo "✅ 설치 완료: $DEST/Whip.app"
+echo "✅ 설치 완료: $DEST/Ppalli.app"
 echo "   Dock 아이콘 클릭 = 채찍 모드 켜기 · ⌥ESC = 어디서든 켜기/끄기"

@@ -1,11 +1,11 @@
-// Whip - 화면을 채찍으로 찰싹! (macOS 앱)
+// Ppalli (빨리) - 느린 AI를 채찍으로 찰싹! (macOS 앱)
 //  - 실행하면 바로 채찍 모드: 클릭 = 채찍 "찰싹!", 꾹 눌렀다 놓기 = 필살기 (아래 앱엔 클릭이 안 감)
 //  - ⌥ Option + ESC: 어디서든 채찍 모드 켜기/끄기 (켜져 있을 땐 ESC만 눌러도 꺼짐)
 //    꺼져 있을 땐 마우스를 평소처럼 사용
 //  - 효과: ⚡ 번개 / 🌪 바람 / 🔥 불 / 💧 물 / 🎲 랜덤 (메뉴에서 선택)
 //  - Dock 아이콘 클릭 = 채찍 모드 켜기, 우클릭 = 메뉴 (메뉴 막대 ⚡ 아이콘에도 같은 메뉴)
 //
-// 빌드:  ./scripts/build-app.sh   → build/Whip.app
+// 빌드:  ./scripts/build-app.sh   → build/Ppalli.app
 // 설치:  ./install.sh             → 빌드해서 응용 프로그램 폴더에 설치
 
 import Cocoa
@@ -1674,7 +1674,7 @@ extension WhipView {
 // MARK: - 앱 (메뉴 막대 아이콘으로 설정)
 
 /// GitHub 저장소 주소 (정보 창과 메뉴의 "홈페이지"에 쓰임)
-let homepageURL = "https://github.com/YOUR_GITHUB_ID/whip"
+let homepageURL = "https://github.com/YOUR_GITHUB_ID/ppalli"
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     var windows: [FxWindow] = []
@@ -1703,7 +1703,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
     // MARK: 시작
 
-    static let wakeNote = Notification.Name("com.whip.app.wake")
+    static let wakeNote = Notification.Name("com.ppalli.app.wake")
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         // 이미 켜져 있는데 또 실행하면 → 새로 켜지 않고, 켜져 있는 쪽을 채찍 모드로
@@ -1894,7 +1894,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let b = statusItem.button {
-            b.image = NSImage(systemSymbolName: "bolt.fill", accessibilityDescription: "Whip")
+            b.image = NSImage(systemSymbolName: "bolt.fill", accessibilityDescription: "Ppalli")
             b.imagePosition = .imageLeft
             b.title = " 0"
         }
@@ -1904,7 +1904,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         menu.addItem(.separator())
         controlItems().forEach { menu.addItem($0) }
         menu.addItem(.separator())
-        menu.addItem(item("Whip 종료", #selector(NSApplication.terminate(_:)), key: "q"))
+        menu.addItem(item("Ppalli 종료", #selector(NSApplication.terminate(_:)), key: "q"))
         menu.items.last?.target = NSApp
         statusItem.menu = menu
         statusItem.isVisible = showMenuBarIcon
@@ -1913,18 +1913,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     func buildMainMenu() -> NSMenu {
         let main = NSMenu()
 
-        // Whip 메뉴
+        // Ppalli 메뉴
         let appMenu = NSMenu()
-        appMenu.addItem(item("Whip에 관하여", #selector(showAbout)))
+        appMenu.addItem(item("Ppalli에 관하여", #selector(showAbout)))
         appMenu.addItem(.separator())
         appMenu.addItem(item("로그인할 때 자동으로 켜기", #selector(toggleLoginItem)))
         appMenu.addItem(item("메뉴 막대에 아이콘 보기", #selector(toggleMenuBarIcon)))
         appMenu.addItem(.separator())
         appMenu.addItem(item("홈페이지 (GitHub)", #selector(openHomepage)))
         appMenu.addItem(.separator())
-        let hide = NSMenuItem(title: "Whip 가리기", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        let hide = NSMenuItem(title: "Ppalli 가리기", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(hide)
-        appMenu.addItem(NSMenuItem(title: "Whip 종료", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        appMenu.addItem(NSMenuItem(title: "Ppalli 종료", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         let appItem = NSMenuItem()
         appItem.submenu = appMenu
         main.addItem(appItem)
@@ -1956,10 +1956,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
     @objc func showAbout() {
         let credits = NSAttributedString(
-            string: "클릭하면 찰싹!\n⌥ESC로 어디서든 채찍 모드 켜기/끄기\n\n\(homepageURL)",
+            string: "빨리 해! 느린 AI를 채찍으로 찰싹.\n⌥ESC로 어디서든 채찍 모드 켜기/끄기\n\n\(homepageURL)",
             attributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.secondaryLabelColor])
         NSApp.activate(ignoringOtherApps: true)
-        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Whip", .credits: credits])
+        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Ppalli", .credits: credits])
     }
 
     @objc func pickElement(_ sender: NSMenuItem) {

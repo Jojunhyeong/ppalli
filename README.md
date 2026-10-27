@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/icon.png" width="160" alt="Whip icon">
+  <img src="docs/icon.png" width="160" alt="Ppalli icon">
 </p>
 
-<h1 align="center">Whip</h1>
+<h1 align="center">Ppalli 빨리</h1>
 
 <p align="center">
   AI가 느릴 때, 화면을 채찍으로 <b>찰싹!</b><br>
@@ -27,22 +27,22 @@
 
 ## 설치
 
-1. [Releases](../../releases/latest)에서 `Whip-x.x.x.dmg`를 받아 열어요
-2. 창 안의 **Whip**을 **Applications** 폴더로 끌어다 놓아요
-3. 응용 프로그램 폴더에서 Whip을 실행해요
+1. [Releases](../../releases/latest)에서 `Ppalli-x.x.x.dmg`를 받아 열어요
+2. 창 안의 **Ppalli**을 **Applications** 폴더로 끌어다 놓아요
+3. 응용 프로그램 폴더에서 Ppalli를 실행해요
 
 ### 처음 열 때 "확인할 수 없음" 경고가 뜨면
 
-Whip은 Apple 유료 개발자 인증서 없이 배포하는 무료 앱이라, 처음 한 번은 직접 허용해 줘야 해요.
+Ppalli는 Apple 유료 개발자 인증서 없이 배포하는 무료 앱이라, 처음 한 번은 직접 허용해 줘야 해요.
 
-1. Whip을 열면 경고가 뜨는데, **완료**를 눌러 닫아요
+1. Ppalli를 열면 경고가 뜨는데, **완료**를 눌러 닫아요
 2. **시스템 설정 → 개인정보 보호 및 보안**으로 가요
-3. 아래쪽에 "Whip이(가) 차단되었습니다"라는 문구 옆의 **그래도 열기**를 눌러요
+3. 아래쪽에 "Ppalli이(가) 차단되었습니다"라는 문구 옆의 **그래도 열기**를 눌러요
 
 또는 터미널에서 한 줄로 해결할 수도 있어요.
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/Whip.app
+xattr -dr com.apple.quarantine /Applications/Ppalli.app
 ```
 
 한 번 허용하면 그다음부터는 그냥 열려요.
@@ -59,7 +59,7 @@ xattr -dr com.apple.quarantine /Applications/Whip.app
 | Dock 아이콘 우클릭 | 효과 선택, 말풍선 문장 바꾸기 |
 
 - 채찍 모드가 켜져 있는 동안에는 클릭이 다른 앱으로 전달되지 않아요. 실수로 뭘 누를 걱정 없이 때려도 돼요.
-- 상단 메뉴 **Whip → 로그인할 때 자동으로 켜기**를 체크하면 맥을 켤 때 조용히 대기하고, `⌥ESC`로 바로 쓸 수 있어요.
+- 상단 메뉴 **Ppalli → 로그인할 때 자동으로 켜기**를 체크하면 맥을 켤 때 조용히 대기하고, `⌥ESC`로 바로 쓸 수 있어요.
 
 ## 효과
 
@@ -79,12 +79,12 @@ Xcode 또는 Command Line Tools(`xcode-select --install`)가 필요해요.
 
 ```bash
 git clone <이 저장소 주소>
-cd whip
+cd ppalli
 ./install.sh          # 빌드해서 응용 프로그램 폴더에 설치
 ```
 
-- `./scripts/build-app.sh` — `build/Whip.app`만 만들기
-- `./scripts/make-dmg.sh` — 배포용 `build/Whip-x.x.x.dmg`, `.zip` 만들기
+- `./scripts/build-app.sh` — `build/Ppalli.app`만 만들기
+- `./scripts/make-dmg.sh` — 배포용 `build/Ppalli-x.x.x.dmg`, `.zip` 만들기
 - `python3 scripts/make-icon.py` — `Resources/icon.svg`를 고친 뒤 앱 아이콘 다시 만들기 (`pip install cairosvg` 필요)
 
 ### 새 버전 배포하기
@@ -111,7 +111,7 @@ git push origin v1.0.0
 
 ## English
 
-**Whip** is a silly little macOS app for when your AI is taking forever. Click anywhere and a leather whip cracks across your screen. *Thwack!*
+**Ppalli** (Korean for *"hurry up!"*) is a silly little macOS app for when your AI is taking forever. Click anywhere and a leather whip cracks across your screen. *Thwack!*
 
 **Features**
 
@@ -124,17 +124,17 @@ git push origin v1.0.0
 
 **Install**
 
-1. Download `Whip-x.x.x.dmg` from [Releases](../../releases/latest) and drag **Whip** into **Applications**
-2. Because Whip isn't signed with a paid Apple Developer certificate, macOS will block it the first time. Close the warning, then go to **System Settings → Privacy & Security** and click **Open Anyway**. Or run:
+1. Download `Ppalli-x.x.x.dmg` from [Releases](../../releases/latest) and drag **Ppalli** into **Applications**
+2. Because Ppalli isn't signed with a paid Apple Developer certificate, macOS will block it the first time. Close the warning, then go to **System Settings → Privacy & Security** and click **Open Anyway**. Or run:
    ```bash
-   xattr -dr com.apple.quarantine /Applications/Whip.app
+   xattr -dr com.apple.quarantine /Applications/Ppalli.app
    ```
 
 **Controls**
 
 | Action | What it does |
 |---|---|
-| Click | Whip |
+| Click | Ppalli |
 | Press & hold, then release | Special move (longer hold = more hits) |
 | `⌥ Option + Esc` | Toggle whip mode from anywhere |
 | `Esc` | Turn whip mode off |
@@ -147,7 +147,7 @@ While whip mode is on, clicks don't reach other apps, so you can't accidentally 
 
 ```bash
 git clone <this repo>
-cd whip
+cd ppalli
 ./install.sh
 ```
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Whip.app 빌드 → build/Whip.app
+# Ppalli.app 빌드 → build/Ppalli.app
 # Apple Silicon + Intel 둘 다 되는 universal 앱으로 만듦 (한쪽이 안 되면 이 Mac용으로만)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -7,9 +7,9 @@ cd "$ROOT"
 
 VERSION="${VERSION:-$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || true)}"
 VERSION="${VERSION:-1.0.0}"
-SRC="$ROOT/Sources/whip.swift"
+SRC="$ROOT/Sources/ppalli.swift"
 OUT="$ROOT/build"
-APP="$OUT/Whip.app"
+APP="$OUT/Ppalli.app"
 MIN_MACOS=13.0
 
 rm -rf "$OUT"
@@ -37,27 +37,27 @@ build_arch() {
   return 1
 }
 
-echo "🔨 Whip v$VERSION 빌드 중..."
+echo "🔨 Ppalli v$VERSION 빌드 중..."
 HOST=$(uname -m)
 OTHER=$([ "$HOST" = "arm64" ] && echo x86_64 || echo arm64)
 
-if ! build_arch "$HOST" "$OUT/Whip-$HOST"; then
+if ! build_arch "$HOST" "$OUT/Ppalli-$HOST"; then
   echo "❌ 빌드 실패. 에러 내용:"
-  compile "$HOST" "$OUT/Whip-$HOST" || true
+  compile "$HOST" "$OUT/Ppalli-$HOST" || true
   exit 1
 fi
-if build_arch "$OTHER" "$OUT/Whip-$OTHER"; then
-  lipo -create "$OUT/Whip-$HOST" "$OUT/Whip-$OTHER" -output "$OUT/Whip"
+if build_arch "$OTHER" "$OUT/Ppalli-$OTHER"; then
+  lipo -create "$OUT/Ppalli-$HOST" "$OUT/Ppalli-$OTHER" -output "$OUT/Ppalli"
   echo "   Apple Silicon + Intel 모두 지원"
 else
-  cp "$OUT/Whip-$HOST" "$OUT/Whip"
+  cp "$OUT/Ppalli-$HOST" "$OUT/Ppalli"
   echo "   ($OTHER용은 건너뜀 - 이 Mac 전용)"
 fi
 
 echo "📦 앱 묶는 중..."
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-mv "$OUT/Whip" "$APP/Contents/MacOS/Whip"
-rm -f "$OUT"/Whip-*
+mv "$OUT/Ppalli" "$APP/Contents/MacOS/Ppalli"
+rm -f "$OUT"/Ppalli-*
 cp "$ROOT/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 sed "s/__VERSION__/$VERSION/g" "$ROOT/Resources/Info.plist" > "$APP/Contents/Info.plist"
 
