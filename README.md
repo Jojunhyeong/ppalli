@@ -58,14 +58,32 @@ xattr -dr com.apple.quarantine /Applications/Ppalli.app
 
 ## 사용법
 
+### 🖱 마우스
+
 | 동작 | 하는 일 |
 |---|---|
 | 클릭 | 채찍 한 방 |
-| 꾹 눌렀다 놓기 | 필살기 (오래 누를수록 연타 수 증가, MAX 12연타) |
-| `⌥ Option + ESC` | 어디서든 채찍 모드 켜기 / 끄기 |
-| `ESC` | 채찍 모드 끄기 |
+| 꾹 눌렀다 놓기 | 필살기 (오래 누를수록 연타 수 증가, 최대 12연타) |
+
+### ⌨️ 단축키
+
+| 단축키 | 하는 일 | 언제 |
+|---|---|---|
+| `⌥ Option` + `ESC` | 채찍 모드 켜기 / 끄기 | **언제든, 어떤 앱을 쓰고 있든** |
+| `ESC` | 채찍 모드 끄기 | 채찍 모드가 켜져 있을 때 |
+| `⌘ Command` + `Q` | Ppalli 종료 | Ppalli가 앞에 있을 때 (채찍 모드 중 포함) |
+| `⌘ Command` + `H` | Ppalli 가리기 | Ppalli가 앞에 있을 때 |
+
+> 💡 제일 많이 쓰는 건 `⌥ESC` 하나예요. 작업 시켜 놓고 `⌥ESC` → 마음껏 때리기 → `ESC`로 끄고 하던 일 계속.
+
+### 🚀 Dock / 메뉴
+
+| 동작 | 하는 일 |
+|---|---|
 | Dock 아이콘 클릭 | 채찍 모드 켜기 |
-| Dock 아이콘 우클릭 | 효과 선택, 말풍선 문장 바꾸기 |
+| Dock 아이콘 우클릭 | 채찍 모드, 효과 선택, 말풍선 문장 바꾸기 |
+| 메뉴 막대 ⚡ 아이콘 | Dock 우클릭과 같은 메뉴 + 채찍질 횟수 |
+| 상단 메뉴 **Ppalli** | 로그인할 때 자동 실행, 메뉴 막대 아이콘 보기/숨기기, 정보 |
 
 - 채찍 모드가 켜져 있는 동안에는 클릭이 다른 앱으로 전달되지 않아요. 실수로 뭘 누를 걱정 없이 때려도 돼요.
 - 상단 메뉴 **Ppalli → 로그인할 때 자동으로 켜기**를 체크하면 맥을 켤 때 조용히 대기하고, `⌥ESC`로 바로 쓸 수 있어요.
@@ -147,16 +165,30 @@ Ppalli isn't signed with a paid Apple Developer certificate, so macOS blocks it 
   ```
   If it finishes with no output, it worked. Ppalli will now open normally.
 
-**Controls**
+**Mouse**
 
 | Action | What it does |
 |---|---|
-| Click | Ppalli |
-| Press & hold, then release | Special move (longer hold = more hits) |
-| `⌥ Option + Esc` | Toggle whip mode from anywhere |
-| `Esc` | Turn whip mode off |
+| Click | Whip |
+| Press & hold, then release | Special move (longer hold = more hits, up to 12) |
+
+**Keyboard shortcuts**
+
+| Shortcut | What it does | When |
+|---|---|---|
+| `⌥ Option` + `Esc` | Toggle whip mode on / off | **Anytime, from any app** |
+| `Esc` | Turn whip mode off | While whip mode is on |
+| `⌘ Command` + `Q` | Quit Ppalli | While Ppalli is in front (including whip mode) |
+| `⌘ Command` + `H` | Hide Ppalli | While Ppalli is in front |
+
+**Dock / menus**
+
+| Action | What it does |
+|---|---|
 | Click the Dock icon | Turn whip mode on |
-| Right-click the Dock icon | Pick an effect, edit speech bubbles |
+| Right-click the Dock icon | Whip mode, pick an effect, edit speech bubbles |
+| ⚡ menu bar icon | Same menu as the Dock, plus a hit counter |
+| **Ppalli** app menu | Launch at login, show/hide menu bar icon, About |
 
 While whip mode is on, clicks don't reach other apps, so you can't accidentally click anything.
 
