@@ -538,10 +538,10 @@ class WhipView: NSView {
     func updateCrosshair() {
         if crosshair.superlayer == nil { buildCrosshair() }
         let m = mouseLocal()
-        let show = whipOnlyMode && !specialRunning && bounds.contains(m)   // 필살기는 사방으로 때려서 숨김
+        let show = whipOnlyMode && bounds.contains(m)
         CATransaction.begin(); CATransaction.setDisableActions(true)
         crosshair.isHidden = !show
-        if show {
+        if show && !specialRunning {                 // 필살기 중엔 쏜 자리에 고정
             let o = m + handleTipOffset
             let (phi, len) = normalAim(from: o)
             crosshair.position = o.moved(phi, len)
@@ -759,6 +759,10 @@ class WhipView: NSView {
         let hits = hitCount(for: g)
         let o = handleTip()
         let aim = mouseLocal()
+        // 손을 놓은 순간 조준선이 있던 자리 (조준선과 똑같은 계산)
+        let (aimPhi, aimLen) = normalAim(from: o)
+        let target = o.moved(aimPhi, aimLen)
+        updateCrosshair()
 
         setDim(0.45, duration: 0.12)
         Sfx.zap.play(volume: 0.5)
@@ -766,12 +770,12 @@ class WhipView: NSView {
         let interval = 0.075
         for i in 0..<hits {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15 + Double(i) * interval) { [weak self] in
-                self?.comboStrike(from: o, aim: aim, element: el)
+                self?.comboStrike(from: o, at: target, aim: aim, element: el)
             }
         }
         let finT = 0.15 + Double(hits) * interval + 0.1
         DispatchQueue.main.asyncAfter(deadline: .now() + finT) { [weak self] in
-            self?.finisher(from: o, aim: aim, power: g, element: el)
+            self?.finisher(from: o, at: target, aim: aim, power: g, element: el)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + finT + 1.4) { [weak self] in
             self?.setDim(0, duration: 0.4)
@@ -780,14 +784,21 @@ class WhipView: NSView {
         }
     }
 
-    func comboStrike(from o: CGPoint, aim: CGPoint, element el: Element) {
-        let maxLen = Double(min(700, hypot(bounds.width, bounds.height) * 0.4))
-        var phi = Double.random(in: 0..<(2 * .pi))
-        var len = maxLen * Double.random(in: 0.55...1)
-        for _ in 0..<12 {
-            if bounds.insetBy(dx: 20, dy: 20).contains(o.moved(phi, len)) { break }
-            phi = Double.random(in: 0..<(2 * .pi)); len *= 0.9
-        }
+    /// 손잡이 끝 o에서 점 p를 정확히 때리는 방향/길이 (채찍은 '착!' 순간 일직선으로 펴짐)
+    func strike(from o: CGPoint, to p: CGPoint) -> (Double, Double) {
+        let dx = Double(p.x - o.x), dy = Double(p.y - o.y)
+        return (atan2(dy, dx), max(40, hypot(dx, dy)))
+    }
+
+    /// 연타: 조준선 주변을 촘촘하게 두들김
+    func comboStrike(from o: CGPoint, at target: CGPoint, aim: CGPoint, element el: Element) {
+        let a = Double.random(in: 0..<(2 * .pi))
+        let r = Double.random(in: 0...1).squareRoot() * 110       // 반지름 110 안에 고르게 흩뿌림
+        let area = bounds.insetBy(dx: 20, dy: 20)
+        var p = target.moved(a, r)
+        p.x = min(max(p.x, area.minX), area.maxX)
+        p.y = min(max(p.y, area.minY), area.maxY)
+        let (phi, len) = strike(from: o, to: p)
         let s = WhipStrike(in: self, phi: phi, length: len, speed: 3, glow: el.glow, origin: { o })
         s.onCrack = { [weak self] tip in
             guard let self else { return }
@@ -801,9 +812,9 @@ class WhipView: NSView {
         addStrike(s)
     }
 
-    func finisher(from o: CGPoint, aim: CGPoint, power: Double, element el: Element) {
-        let (phi, len) = pickDirection(from: o, preferred: [135, 155, 115, 175, 95, 195, 75],
-                                       maxLen: Double(min(760, bounds.width * 0.5)))
+    /// 마무리: 조준선 한가운데에 정확히
+    func finisher(from o: CGPoint, at target: CGPoint, aim: CGPoint, power: Double, element el: Element) {
+        let (phi, len) = strike(from: o, to: target)
         let s = WhipStrike(in: self, phi: phi, length: len, speed: 1.7, glow: el.glow, origin: { o })
         s.onCrack = { [weak self] tip in
             guard let self else { return }
