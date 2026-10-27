@@ -28,24 +28,33 @@
 ## 설치
 
 1. [Releases](../../releases/latest)에서 `Ppalli-x.x.x.dmg`를 받아 열어요
-2. 창 안의 **Ppalli**을 **Applications** 폴더로 끌어다 놓아요
+2. 창 안의 **Ppalli**를 **Applications** 폴더로 끌어다 놓아요
 3. 응용 프로그램 폴더에서 Ppalli를 실행해요
 
-### 처음 열 때 "확인할 수 없음" 경고가 뜨면
+### ⚠️ "'Ppalli'을(를) 열지 않음" 경고가 뜨면
 
-Ppalli는 Apple 유료 개발자 인증서 없이 배포하는 무료 앱이라, 처음 한 번은 직접 허용해 줘야 해요.
+> Apple은 'Ppalli'에 사용자의 Mac에 손상을 입히거나 사용자의 개인정보에 침입할 수 있는 악성 코드가 없음을 확인할 수 없습니다.
 
-1. Ppalli를 열면 경고가 뜨는데, **완료**를 눌러 닫아요
-2. **시스템 설정 → 개인정보 보호 및 보안**으로 가요
-3. 아래쪽에 "Ppalli이(가) 차단되었습니다"라는 문구 옆의 **그래도 열기**를 눌러요
+Ppalli는 Apple 유료 개발자 인증서(연 $99) 없이 배포하는 무료 앱이라, 처음 한 번은 이 경고가 떠요. 앱에 문제가 있는 게 아니에요. 아래 두 방법 중 편한 걸로 **한 번만** 허용하면 그다음부터는 그냥 열려요.
 
-또는 터미널에서 한 줄로 해결할 수도 있어요.
+> 💡 먼저 Ppalli를 **응용 프로그램(Applications)** 폴더로 옮긴 다음 해 주세요.
+
+#### 방법 1. 시스템 설정에서 허용하기
+
+1. 경고 창에서 **완료**를 눌러 닫아요
+2. **시스템 설정 → 개인정보 보호 및 보안**으로 가서 맨 아래까지 내려요
+3. "'Ppalli'이(가) Mac을 보호하기 위해 차단되었습니다" 옆의 **그래도 열기**를 눌러요
+4. 다시 뜨는 창에서 **그래도 열기**를 누르고, 비밀번호나 Touch ID로 확인해요
+
+#### 방법 2. 터미널에서 한 줄로 해결하기 (더 빠름)
+
+**터미널**(Spotlight에서 `터미널` 검색)을 열고 아래 한 줄을 붙여넣은 뒤 Enter를 눌러요.
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/Ppalli.app
 ```
 
-한 번 허용하면 그다음부터는 그냥 열려요.
+아무 메시지 없이 끝나면 성공이에요. 이제 Ppalli를 열면 경고 없이 바로 실행돼요.
 
 ## 사용법
 
@@ -125,10 +134,18 @@ git push origin v1.0.0
 **Install**
 
 1. Download `Ppalli-x.x.x.dmg` from [Releases](../../releases/latest) and drag **Ppalli** into **Applications**
-2. Because Ppalli isn't signed with a paid Apple Developer certificate, macOS will block it the first time. Close the warning, then go to **System Settings → Privacy & Security** and click **Open Anyway**. Or run:
-   ```bash
-   xattr -dr com.apple.quarantine /Applications/Ppalli.app
-   ```
+2. Open Ppalli from your Applications folder
+
+**If macOS says "'Ppalli' Not Opened"**
+
+Ppalli isn't signed with a paid Apple Developer certificate, so macOS blocks it the first time. Nothing is wrong with the app. Move it to **Applications** first, then allow it once using either method:
+
+- **Option 1 — System Settings:** Click **Done** on the warning, open **System Settings → Privacy & Security**, scroll to the bottom, click **Open Anyway** next to the Ppalli message, and confirm with your password or Touch ID.
+- **Option 2 — Terminal (faster):** Open Terminal and run:
+  ```bash
+  xattr -dr com.apple.quarantine /Applications/Ppalli.app
+  ```
+  If it finishes with no output, it worked. Ppalli will now open normally.
 
 **Controls**
 
