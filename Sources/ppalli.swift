@@ -3,6 +3,7 @@
 //  - ⌥ Option + ESC: 어디서든 채찍 모드 켜기/끄기 (켜져 있을 땐 ESC만 눌러도 꺼짐)
 //    꺼져 있을 땐 마우스를 평소처럼 사용
 //  - 효과: ⚡ 번개 / 🌪 바람 / 🔥 불 / 💧 물 / 🎲 랜덤 (메뉴에서 선택)
+//  - 자동 업데이트: 켤 때 GitHub에 새 버전이 있으면 패치 내용을 보여 주고 바로 업데이트
 //  - Dock 아이콘 클릭 = 채찍 모드 켜기, 우클릭 = 메뉴 (메뉴 막대 ⚡ 아이콘에도 같은 메뉴)
 //
 // 빌드:  ./scripts/build-app.sh   → build/Ppalli.app
@@ -1682,6 +1683,236 @@ extension WhipView {
     }
 }
 
+// MARK: - 자동 업데이트 (GitHub Releases)
+//
+// 1) 앱을 켤 때(그리고 메뉴의 "업데이트 확인…") GitHub의 최신 릴리스를 확인
+// 2) 지금 버전보다 새 버전이면 패치 내용과 함께 물어봄
+// 3) "업데이트" → Ppalli-x.x.x.zip을 받아서 앱을 바꾸고 다시 실행
+//    (앱이 직접 받은 파일이라 "확인할 수 없는 개발자" 경고가 다시 뜨지 않음)
+// 앱 폴더에 쓸 권한이 없으면 다운로드 페이지를 대신 열어 줌
+
+let updateRepo = "Jojunhyeong/ppalli"
+
+struct ReleaseInfo {
+    let version: String
+    let notes: String
+    let pageURL: URL
+    let zipURL: URL?
+}
+
+final class Updater: NSObject {
+    static let shared = Updater()
+    private let defaults = UserDefaults.standard
+    private var busy = false
+
+    var currentVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+    }
+
+    var autoCheck: Bool {
+        get { defaults.object(forKey: "autoUpdateCheck") as? Bool ?? true }
+        set { defaults.set(newValue, forKey: "autoUpdateCheck") }
+    }
+
+    /// "1.0.10" > "1.0.9" 처럼 숫자로 비교
+    static func isNewer(_ a: String, than b: String) -> Bool {
+        func parts(_ s: String) -> [Int] {
+            s.trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
+                .split(separator: ".").map { Int($0.prefix { $0.isNumber }) ?? 0 }
+        }
+        let x = parts(a), y = parts(b)
+        for i in 0..<max(x.count, y.count) {
+            let p = i < x.count ? x[i] : 0, q = i < y.count ? y[i] : 0
+            if p != q { return p > q }
+        }
+        return false
+    }
+
+    /// 앱을 켤 때 조용히 확인 (새 버전이 없거나 인터넷이 안 되면 아무것도 안 뜸)
+    func checkOnLaunch() {
+        guard autoCheck, Bundle.main.bundleIdentifier != nil else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { self.check(userInitiated: false) }
+    }
+
+    func check(userInitiated: Bool) {
+        guard !busy else { return }
+        busy = true
+        fetchLatest { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.busy = false
+                switch result {
+                case .failure(let error):
+                    if userInitiated { self.alert("업데이트를 확인하지 못했어요", error.localizedDescription) }
+                case .success(let info):
+                    if Self.isNewer(info.version, than: self.currentVersion) {
+                        // 자동 확인에서는 "이 버전 건너뛰기"한 버전은 다시 묻지 않음
+                        if !userInitiated, self.defaults.string(forKey: "skippedVersion") == info.version { return }
+                        self.offer(info)
+                    } else if userInitiated {
+                        self.alert("최신 버전이에요", "지금 쓰고 있는 Ppalli \(self.currentVersion)이(가) 최신 버전이에요.")
+                    }
+                }
+            }
+        }
+    }
+
+    private func fetchLatest(_ done: @escaping (Result<ReleaseInfo, Error>) -> Void) {
+        guard let url = URL(string: "https://api.github.com/repos/\(updateRepo)/releases/latest") else { return }
+        var req = URLRequest(url: url, timeoutInterval: 15)
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        req.setValue("Ppalli/\(currentVersion)", forHTTPHeaderField: "User-Agent")
+        URLSession.shared.dataTask(with: req) { data, response, error in
+            if let error { done(.failure(error)); return }
+            guard let data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let tag = json["tag_name"] as? String,
+                  let page = (json["html_url"] as? String).flatMap({ URL(string: $0) }) else {
+                done(.failure(NSError(domain: "Ppalli", code: 1,
+                                      userInfo: [NSLocalizedDescriptionKey: "GitHub에서 릴리스 정보를 읽지 못했어요."])))
+                return
+            }
+            let assets = json["assets"] as? [[String: Any]] ?? []
+            let zip = assets.first { ($0["name"] as? String)?.hasSuffix(".zip") == true }?["browser_download_url"] as? String
+            let version = tag.trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
+            done(.success(ReleaseInfo(version: version,
+                                      notes: Self.plainText(json["body"] as? String ?? ""),
+                                      pageURL: page,
+                                      zipURL: zip.flatMap({ URL(string: $0) }))))
+        }.resume()
+    }
+
+    /// 릴리스 노트의 마크다운 기호를 걷어내서 알림 창에 보기 좋게
+    static func plainText(_ md: String) -> String {
+        var lines: [String] = []
+        for raw in md.components(separatedBy: .newlines) {
+            var l = raw
+            if l.hasPrefix("#") { l = l.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces) }
+            if l.hasPrefix("> ") { l = String(l.dropFirst(2)) }
+            if l.hasPrefix("- ") || l.hasPrefix("* ") { l = "• " + l.dropFirst(2) }
+            l = l.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "`", with: "")
+            lines.append(l)
+        }
+        let text = lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.count > 900 ? String(text.prefix(900)) + "…" : text
+    }
+
+    /// 채찍 모드의 투명 창이 알림 창을 덮지 않도록 잠깐 꺼 둠
+    private func clearOverlay() {
+        if whipOnlyMode { (NSApp.delegate as? AppDelegate)?.setWhipOnly(false, quiet: true) }
+    }
+
+    private func offer(_ info: ReleaseInfo) {
+        clearOverlay()
+        NSApp.activate(ignoringOtherApps: true)
+        let a = NSAlert()
+        a.messageText = "새 버전이 있어요: Ppalli \(info.version)"
+        a.informativeText = "지금 버전: \(currentVersion)\n\n"
+            + (info.notes.isEmpty ? "" : "바뀐 내용\n\(info.notes)\n\n")
+            + "업데이트하면 앱이 잠깐 꺼졌다가 새 버전으로 다시 켜져요."
+        a.addButton(withTitle: "업데이트")
+        a.addButton(withTitle: "나중에")
+        a.addButton(withTitle: "이 버전 건너뛰기")
+        switch a.runModal() {
+        case .alertFirstButtonReturn: install(info)
+        case .alertThirdButtonReturn: defaults.set(info.version, forKey: "skippedVersion")
+        default: break
+        }
+    }
+
+    // MARK: 설치
+
+    private func install(_ info: ReleaseInfo) {
+        let appURL = Bundle.main.bundleURL
+        let parent = appURL.deletingLastPathComponent()
+        // 앱 폴더에 쓸 수 없거나(권한, 다운로드 폴더에서 바로 실행 등) zip이 없으면 → 다운로드 페이지
+        guard let zipURL = info.zipURL,
+              FileManager.default.isWritableFile(atPath: parent.path),
+              !appURL.path.contains("/AppTranslocation/") else {
+            alert("직접 받아 주세요",
+                  "이 위치에서는 자동으로 바꿀 수 없어요. 다운로드 페이지를 열게요.\n"
+                  + "(Ppalli를 응용 프로그램 폴더로 옮겨 두면 다음부터 자동으로 돼요.)")
+            NSWorkspace.shared.open(info.pageURL)
+            return
+        }
+        toast("⬇️ Ppalli \(info.version) 받는 중…")
+        URLSession.shared.downloadTask(with: zipURL) { [weak self] tmp, response, error in
+            // 받은 임시 파일은 이 블록이 끝나면 지워지므로 바로 옮겨 둠
+            var saved: URL?
+            if let tmp, error == nil, (response as? HTTPURLResponse)?.statusCode ?? 200 < 400 {
+                let dst = FileManager.default.temporaryDirectory.appendingPathComponent("ppalli-\(UUID().uuidString).zip")
+                if (try? FileManager.default.moveItem(at: tmp, to: dst)) != nil { saved = dst }
+            }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                guard let saved else {
+                    self.alert("업데이트를 받지 못했어요", error?.localizedDescription ?? "다시 시도해 주세요.")
+                    return
+                }
+                do {
+                    try self.replace(app: appURL, withZip: saved)
+                } catch {
+                    self.alert("업데이트를 설치하지 못했어요",
+                               error.localizedDescription + "\n다운로드 페이지를 열게요.")
+                    NSWorkspace.shared.open(info.pageURL)
+                }
+            }
+        }.resume()
+    }
+
+    private func replace(app appURL: URL, withZip zip: URL) throws {
+        let fm = FileManager.default
+        let work = fm.temporaryDirectory.appendingPathComponent("ppalli-update-\(UUID().uuidString)")
+        try fm.createDirectory(at: work, withIntermediateDirectories: true)
+        let zipPath = work.appendingPathComponent("update.zip")
+        try fm.moveItem(at: zip, to: zipPath)
+
+        // 압축 풀기
+        let unzip = Process()
+        unzip.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        unzip.arguments = ["-x", "-k", zipPath.path, work.path]
+        try unzip.run()
+        unzip.waitUntilExit()
+        let newApp = work.appendingPathComponent("Ppalli.app")
+        guard unzip.terminationStatus == 0,
+              let newID = Bundle(url: newApp)?.bundleIdentifier,
+              newID == Bundle.main.bundleIdentifier else {
+            throw NSError(domain: "Ppalli", code: 2,
+                          userInfo: [NSLocalizedDescriptionKey: "받은 파일이 올바른 Ppalli 앱이 아니에요."])
+        }
+
+        // 지금 앱이 꺼지길 기다렸다가 → 바꾸고 → 다시 실행하는 작은 스크립트
+        let pid = ProcessInfo.processInfo.processIdentifier
+        let script = """
+        while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done
+        rm -rf "$1" && mv "$2" "$1"
+        xattr -dr com.apple.quarantine "$1" 2>/dev/null
+        open "$1"
+        rm -rf "$3"
+        """
+        let sh = Process()
+        sh.executableURL = URL(fileURLWithPath: "/bin/sh")
+        sh.arguments = ["-c", script, "sh", appURL.path, newApp.path, work.path]
+        try sh.run()
+        NSApp.terminate(nil)
+    }
+
+    // MARK: 알림
+
+    private func alert(_ title: String, _ text: String) {
+        clearOverlay()
+        NSApp.activate(ignoringOtherApps: true)
+        let a = NSAlert()
+        a.messageText = title
+        a.informativeText = text
+        a.runModal()
+    }
+
+    private func toast(_ text: String) {
+        (NSApp.delegate as? AppDelegate)?.views.first?.toast(text)
+    }
+}
+
 // MARK: - 앱 (메뉴 막대 아이콘으로 설정)
 
 /// GitHub 저장소 주소 (정보 창과 메뉴의 "홈페이지"에 쓰임)
@@ -1767,6 +1998,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
         // 직접 실행하면 바로 채찍 모드. 로그인 때 자동 실행이 켜져 있으면 조용히 대기 (⌥ESC로 켜기)
         setWhipOnly(!loginItemEnabled)
+        Updater.shared.checkOnLaunch()
     }
 
     /// Dock 아이콘 클릭 (또는 Finder/Spotlight에서 다시 실행) → 채찍 모드 켜기
@@ -1786,7 +2018,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
     @objc func toggleWhipOnly() { setWhipOnly(!whipOnlyMode) }
 
-    func setWhipOnly(_ on: Bool) {
+    func setWhipOnly(_ on: Bool, quiet: Bool = false) {
         whipOnlyMode = on
         for w in windows {
             w.ignoresMouseEvents = !on
@@ -1801,9 +2033,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             windows.first?.makeKeyAndOrderFront(nil)
             views.first?.toast("🎯 채찍 모드 · 클릭하면 채찍, 꾹 누르면 필살기 · ESC로 끄기")
         } else {
-            views.first?.toast("채찍 모드 끔 · ⌥ESC 또는 Dock 아이콘으로 다시 켜기")
             NSCursor.arrow.set()
-            NSApp.deactivate()          // 하던 앱으로 바로 돌아가기
+            if !quiet {
+                views.first?.toast("채찍 모드 끔 · ⌥ESC 또는 Dock 아이콘으로 다시 켜기")
+                NSApp.deactivate()      // 하던 앱으로 바로 돌아가기
+            }
         }
     }
 
@@ -1896,6 +2130,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             return isAppBundle
         case #selector(toggleMenuBarIcon):
             menuItem.state = showMenuBarIcon ? .on : .off
+        case #selector(toggleAutoUpdate):
+            menuItem.state = Updater.shared.autoCheck ? .on : .off
         default:
             break
         }
@@ -1915,6 +2151,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         menu.addItem(.separator())
         controlItems().forEach { menu.addItem($0) }
         menu.addItem(.separator())
+        menu.addItem(item("업데이트 확인…", #selector(checkForUpdates)))
         menu.addItem(item("Ppalli 종료", #selector(NSApplication.terminate(_:)), key: "q"))
         menu.items.last?.target = NSApp
         statusItem.menu = menu
@@ -1931,6 +2168,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         appMenu.addItem(item("로그인할 때 자동으로 켜기", #selector(toggleLoginItem)))
         appMenu.addItem(item("메뉴 막대에 아이콘 보기", #selector(toggleMenuBarIcon)))
         appMenu.addItem(.separator())
+        appMenu.addItem(item("업데이트 확인…", #selector(checkForUpdates)))
+        appMenu.addItem(item("자동으로 업데이트 확인", #selector(toggleAutoUpdate)))
         appMenu.addItem(item("홈페이지 (GitHub)", #selector(openHomepage)))
         appMenu.addItem(.separator())
         let hide = NSMenuItem(title: "Ppalli 가리기", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
@@ -1960,6 +2199,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     }
 
     @objc func toggleMenuBarIcon() { showMenuBarIcon.toggle() }
+    @objc func checkForUpdates() { Updater.shared.check(userInitiated: true) }
+    @objc func toggleAutoUpdate() { Updater.shared.autoCheck.toggle() }
 
     @objc func openHomepage() {
         if let url = URL(string: homepageURL) { NSWorkspace.shared.open(url) }
@@ -1978,6 +2219,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     }
 
     @objc func editPhrases() {
+        if whipOnlyMode { setWhipOnly(false, quiet: true) }   // 투명 창이 입력 창을 덮지 않도록
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = "말풍선 문장"

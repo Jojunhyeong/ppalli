@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="../../releases/latest"><b>⬇️ 최신 버전 다운로드</b></a> ·
+  <a href="CHANGELOG.md">📝 패치 내용</a> ·
   <a href="#english">English</a>
 </p>
 
@@ -88,6 +89,20 @@ xattr -dr com.apple.quarantine /Applications/Ppalli.app
 - 채찍 모드가 켜져 있는 동안에는 클릭이 다른 앱으로 전달되지 않아요. 실수로 뭘 누를 걱정 없이 때려도 돼요.
 - 상단 메뉴 **Ppalli → 로그인할 때 자동으로 켜기**를 체크하면 맥을 켤 때 조용히 대기하고, `⌥ESC`로 바로 쓸 수 있어요.
 
+## 🔄 자동 업데이트
+
+한 번 설치하면 새 버전은 앱이 알아서 챙겨요.
+
+- 앱을 켤 때 새 버전이 있으면 **바뀐 내용과 함께** "새 버전이 있어요" 창이 떠요
+- **업데이트**를 누르면 받아서 바꾸고 다시 켜져요. 이때는 "확인할 수 없는 개발자" 경고도 다시 안 떠요
+- 직접 확인하고 싶으면 상단 메뉴 **Ppalli → 업데이트 확인…**
+- 자동 확인을 끄려면 **Ppalli → 자동으로 업데이트 확인** 체크 해제
+- Ppalli가 **응용 프로그램 폴더**에 있어야 자동으로 바뀌어요. 다른 곳에 있으면 다운로드 페이지를 열어 줘요
+
+> 1.0.1 이하 버전에는 자동 업데이트가 없어요. [최신 버전](../../releases/latest)을 한 번만 직접 받아 주세요.
+
+버전별로 바뀐 점은 [패치 내용(CHANGELOG)](CHANGELOG.md)에서 볼 수 있어요.
+
 ## 효과
 
 | 효과 | 한 방 | 필살기 마무리 |
@@ -116,12 +131,16 @@ cd ppalli
 
 ### 새 버전 배포하기
 
-`v`로 시작하는 태그를 올리면 GitHub Actions가 자동으로 앱을 빌드해서 Releases에 DMG와 ZIP을 올려요.
+1. [CHANGELOG.md](CHANGELOG.md) 맨 위에 `## 1.0.3 (날짜)` 칸을 만들고 바뀐 점을 적어요
+2. 커밋하고 `v`로 시작하는 태그를 올려요
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.3
+git push origin v1.0.3
 ```
+
+GitHub Actions가 자동으로 앱을 빌드해서 Releases에 DMG와 ZIP을 올리고, CHANGELOG에 적은 내용을 릴리스 노트로 붙여요.
+이미 설치한 사람들의 앱은 다음에 켤 때 그 패치 내용을 보여 주며 업데이트를 물어봐요.
 
 ## 요구 사항
 
@@ -188,7 +207,11 @@ Ppalli isn't signed with a paid Apple Developer certificate, so macOS blocks it 
 | Click the Dock icon | Turn whip mode on |
 | Right-click the Dock icon | Whip mode, pick an effect, edit speech bubbles |
 | ⚡ menu bar icon | Same menu as the Dock, plus a hit counter |
-| **Ppalli** app menu | Launch at login, show/hide menu bar icon, About |
+| **Ppalli** app menu | Launch at login, show/hide menu bar icon, check for updates, About |
+
+**Auto-update**
+
+Once installed, Ppalli keeps itself up to date. On launch it checks GitHub for a newer release, shows what changed, and offers to update — one click downloads it, swaps the app, and relaunches (no Gatekeeper warning this time). Use **Ppalli → Check for Updates…** (업데이트 확인…) to check manually. Versions 1.0.1 and earlier don't have this, so download the latest release once by hand. See the [changelog](CHANGELOG.md) for what's new in each version.
 
 While whip mode is on, clicks don't reach other apps, so you can't accidentally click anything.
 
@@ -200,6 +223,6 @@ cd ppalli
 ./install.sh
 ```
 
-Requires macOS 13+ and Xcode or Command Line Tools. Push a `v*` tag to have GitHub Actions build and publish a release automatically.
+Requires macOS 13+ and Xcode or Command Line Tools. To release: add a `## x.y.z` section to [CHANGELOG.md](CHANGELOG.md), then push a `v*` tag — GitHub Actions builds the app and publishes a release with those notes.
 
 **License** — [MIT](LICENSE)

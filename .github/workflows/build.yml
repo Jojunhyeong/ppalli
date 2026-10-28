@@ -1,0 +1,15 @@
+name: Build
+
+# main에 올릴 때마다 앱이 잘 빌드되는지 확인 (배포는 하지 않음)
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build Ppalli.app
+        run: ./scripts/build-app.sh

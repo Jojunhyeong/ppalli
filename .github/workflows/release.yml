@@ -24,10 +24,21 @@ jobs:
       - name: Make DMG / ZIP
         run: ./scripts/make-dmg.sh
 
+      # CHANGELOG.md에서 이 버전의 패치 내용을 꺼내 릴리스 노트로 씀
+      - name: Release notes
+        run: |
+          ./scripts/release-notes.sh "$VERSION" > build/notes.md
+          if [ ! -s build/notes.md ]; then
+            echo "::warning::CHANGELOG.md에 $VERSION 칸이 없어요"
+            echo "Ppalli $VERSION" > build/notes.md
+          fi
+          cat build/notes.md
+
       - name: Publish release
         uses: softprops/action-gh-release@v3
         with:
           files: |
             build/Ppalli-*.dmg
             build/Ppalli-*.zip
-          generate_release_notes: true
+          name: Ppalli ${{ env.VERSION }}
+          body_path: build/notes.md
